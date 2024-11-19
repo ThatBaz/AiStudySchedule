@@ -1,0 +1,11 @@
+flask
+flask_sqlalchemy
+flask_cors
+Flask-Migrate
+transformers
+psycopg2-binary
+tensorflow
+tf-keras
+flask-login
+werkzeug
+PyPDF2
