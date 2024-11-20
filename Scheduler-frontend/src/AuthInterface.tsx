@@ -6,18 +6,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./com
 import { Input } from "./components/ui/input"
 import { Label } from "./components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select"
-
+import { useNavigate } from 'react-router-dom';
 
 // Login Component
 const Login = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const navigate = useNavigate(); // Initialize the navigation hook
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Implement login logic here
-    console.log('Login:', { email, password })
-  }
+    try {
+      const response = await fetch('http://localhost:5000/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+  
+      const data = await response.json();
+      console.log('Login successful:', data);
+  
+      // Save the token (if returned) to localStorage or cookies for authentication
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+      
+      // Redirect to the dashboard
+      navigate('/dashboard');
+
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('Invalid email or password');
+    }  
+  };
 
   return (
     <form onSubmit={handleLogin}>
@@ -117,12 +144,45 @@ const Signup = () => {
       subjects: [...formData.subjects, { name: '', file: null, studyDay: '' }]
     })
   }
-
-  const handleSubmit = (e: React.FormEvent) => {
+  // submit function for pushing the signup data to the backend
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Implement signup logic here
-    console.log('Signup:', formData)
-  }
+
+    // Gather the data
+    const data = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        studyHours: formData.studyHours,
+        studyTime: formData.studyTime,
+        subjects: formData.subjects.map(subject => ({
+            name: subject.name,
+            studyDay: subject.studyDay,
+            file: subject.file?.name, // Handle file uploads separately
+        }))
+    }
+
+    try {
+        const response = await fetch('http://localhost:5000/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+
+        const result = await response.json()
+        if (response.ok) {
+            alert('Signup successful!')
+            // Redirect or update UI
+        } else {
+            alert(result.error || 'Signup failed')
+        }
+    } catch (error) {
+        console.error('Error during signup:', error)
+        alert('An error occurred during signup')
+    }
+}
 
   return (
     <form onSubmit={handleSubmit}>

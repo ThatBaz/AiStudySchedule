@@ -12,7 +12,6 @@ from werkzeug.utils import secure_filename
 from PyPDF2 import PdfReader
 
 app = Flask(__name__)
-app = Flask(__name__)
 app.secret_key = 'your-secret-key'  # Needed for session management
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost/study_schedule_db'  # Database URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -38,22 +37,22 @@ def home():
     """Renders the welcome page."""
     return "Welcome to the AI-Powered Study Scheduler!"
 
-#def generate_flashcards_from_pdf(filepath):
-    """Generates flashcards from a PDF file."""
-    flashcards = []
-    reader = PdfReader(filepath)
-    text = " ".join([page.extract_text() for page in reader.pages])
+# #def generate_flashcards_from_pdf(filepath):
+#     """Generates flashcards from a PDF file."""
+#     flashcards = []
+#     reader = PdfReader(filepath)
+#     text = " ".join([page.extract_text() for page in reader.pages])
 
-    # Split text into chunks for summarization
-    chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
+#     # Split text into chunks for summarization
+#     chunks = [text[i:i+1000] for i in range(0, len(text), 1000)]
 
-    for chunk in chunks:
-        inputs = tokenizer(chunk, return_tensors="pt", max_length=512, truncation=True)
-        outputs = model.generate(inputs['input_ids'], max_length=128, num_beams=4, early_stopping=True)
-        summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        flashcards.append(summary)
+#     for chunk in chunks:
+#         inputs = tokenizer(chunk, return_tensors="pt", max_length=512, truncation=True)
+#         outputs = model.generate(inputs['input_ids'], max_length=128, num_beams=4, early_stopping=True)
+#         summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+#         flashcards.append(summary)
 
-    return flashcards
+#     return flashcards
 
 
 # # Summarize PDFs into Flashcards
@@ -142,11 +141,9 @@ def login():
     password = data['password']
 
     user = User.query.filter_by(email=email).first()
-    user = User.query.filter_by(email=email).first()
     if user is None or not user.check_password(password):
         return jsonify({"error": "Invalid email or password"}), 401
 
-    login_user(user)
     login_user(user)
     return jsonify({"message": "Login successful"}), 200
 
