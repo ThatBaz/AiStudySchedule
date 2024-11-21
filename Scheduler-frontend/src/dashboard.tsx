@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { Button } from "./components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./components/ui/card"
 import { Input } from "./components/ui/input"
@@ -11,6 +12,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "./components/ui/dialog"
 import { ChevronDown, Plus, LogOut, Settings } from 'lucide-react'
 import ModernCalendar from './modern-calendar'
+
+interface Subject {
+  name: string
+  progress: number
+  flashcards_total: number
+  flashcards_studied: number
+}
+
+interface UserData {
+  id: number
+  name: string
+  email: string
+  study_hours: number
+  study_time: string
+  subjects: Subject[]
+}
 
 // Mock data for subjects
 const initialSubjects = [
@@ -27,6 +44,57 @@ const mockFlashcards = [
 ]
 
 export default function HomeDashboard() {
+  const [userData, setUserData] = useState<UserData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/')
+        return
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/user_data', {
+          headers: {
+            'Authorization': token
+          }
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          setUserData(data)
+        } else {
+          throw new Error('Failed to fetch user data')
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+        setError('Failed to load user data. Please try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [navigate])
+
+  // logout function
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    navigate('/')
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Loading...</div>
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center h-screen text-red-500">{error}</div>
+  }
+
   const [subjects, setSubjects] = useState(initialSubjects)
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null)
   const [isAddingSubject, setIsAddingSubject] = useState(false)

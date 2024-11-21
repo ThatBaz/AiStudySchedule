@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "./components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./components/ui/card"
 import { Input } from "./components/ui/input"
 import { Label } from "./components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select"
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./components/ui/select"
 import { useNavigate } from 'react-router-dom';
+
+
 
 // Login Component
 const Login = () => {
@@ -38,7 +40,7 @@ const Login = () => {
       }
       
       // Redirect to the dashboard
-      navigate('/dashboard');
+      navigate('/');
 
     } catch (error) {
       console.error('Error during login:', error);
@@ -54,7 +56,7 @@ const Login = () => {
           <Input 
             id="email" 
             type="email" 
-            placeholder="m@example.com" 
+            placeholder="user@example.com" 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required 
@@ -78,6 +80,7 @@ const Login = () => {
 
 // Multi-step Signup Component
 const Signup = () => {
+  const navigate = useNavigate(); // Initialize the navigation hook
   const [step, setStep] = useState(1)
   const [formData, setFormData] = useState({
     name: '',
@@ -174,7 +177,8 @@ const Signup = () => {
         const result = await response.json()
         if (response.ok) {
             alert('Signup successful!')
-            // Redirect or update UI
+            localStorage.setItem('token', result.token)
+            navigate('/dashboard')
         } else {
             alert(result.error || 'Signup failed')
         }
@@ -266,42 +270,6 @@ const Signup = () => {
               required 
             />
           </div>
-          <Button type="button" onClick={handleNextStep} className="w-full">Next</Button>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="space-y-4">
-          {formData.subjects.map((subject, index) => (
-            <div key={index} className="space-y-2 p-4 border rounded">
-              <Label htmlFor={`subject-${index}`}>Subject Name</Label>
-              <Input 
-                id={`subject-${index}`} 
-                value={subject.name}
-                onChange={(e) => handleSubjectChange(index, 'name', e.target.value)}
-                required 
-              />
-              <Label htmlFor={`file-${index}`}>Subject PDF</Label>
-              <Input 
-                id={`file-${index}`} 
-                type="file" 
-                onChange={(e) => handleFileChange(index, e.target.files?.[0] || null)}
-                required 
-              />
-              <Label htmlFor={`studyDay-${index}`}>Study Day</Label>
-              <Select onValueChange={(value) => handleSubjectChange(index, 'studyDay', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a day" />
-                </SelectTrigger>
-                <SelectContent>
-                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                    <SelectItem key={day} value={day}>{day}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ))}
-          <Button type="button" onClick={addSubject} variant="outline" className="w-full">Add Subject</Button>
           <Button type="submit" className="w-full">Sign Up</Button>
         </div>
       )}
@@ -311,8 +279,33 @@ const Signup = () => {
 
 // Main Component
 export default function AuthInterface() {
+  const navigate = useNavigate(); // Initialize the navigation hook
   const [isLogin, setIsLogin] = useState(true)
 
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      verifyToken(token)
+    }
+  }, [])
+
+  const verifyToken = async (token: string) => {
+    try {
+      const response = await fetch('http://localhost:5000/verify_token', {
+        method: 'POST',
+        headers: {
+          'Authorization': token
+        }
+      })
+      if (response.ok) {
+        navigate('/dashboard')
+      } else {
+        localStorage.removeItem('token')
+      }
+    } catch (error) {
+      console.error('Error verifying token:', error)
+    }
+  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-[350px]">

@@ -9,3 +9,11 @@ tf-keras
 flask-login
 werkzeug
 PyPDF2
+torch
+transformers
+datasets
+nltk
+scikit-learn
+tqdm
+sentencepiece
+flask-jwt-extended
