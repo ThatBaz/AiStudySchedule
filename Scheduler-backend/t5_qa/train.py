@@ -1,4 +1,5 @@
-from transformers import T5ForConditionalGeneration, AdamW
+from transformers import T5ForConditionalGeneration
+from torch.optim import AdamW
 from torch.utils.data import DataLoader
 import torch
 from preprocess import preprocess_dataset
