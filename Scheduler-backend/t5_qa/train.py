@@ -7,7 +7,7 @@ from transformers import get_linear_schedule_with_warmup
 from tqdm import tqdm
 from validate import validate
 
-def train(model, train_dataset, val_dataset, tokenizer, device, num_epochs=10, batch_size=8, lr=5e-5, valid_step=5000):
+def train(model, train_dataset, val_dataset, tokenizer, device, num_epochs=10, batch_size=1, lr=5e-5, valid_step=5000):
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
