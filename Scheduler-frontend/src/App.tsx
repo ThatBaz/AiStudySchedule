@@ -10,7 +10,11 @@ function App() {
     <Router>
       <>
         <Routes>
-          <Route path="/" element={<AuthInterface />} />
+          <Route path="/" element={
+            <ConditionalRoute>
+              <AuthInterface />
+            </ConditionalRoute>
+          } />
           <Route 
             path="/dashboard" 
             element={
@@ -26,12 +30,21 @@ function App() {
   );
 }
 
+function ConditionalRoute({ children }: { children: React.ReactNode }) {
+  const token = localStorage.getItem('token');
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+}
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const token = localStorage.getItem('token');
   if (!token) {
-    return <Navigate to="/" replace/>;
+    return <Navigate to="/" replace />;
   }
   return children;
 }
 
 export default App;
+

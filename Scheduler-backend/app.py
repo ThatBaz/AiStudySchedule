@@ -1,11 +1,12 @@
 from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from datetime import timedelta
 from flask_migrate import Migrate
 from database import Subject, db, User
+import logging
+from flask_jwt_extended.exceptions import NoAuthorizationError
 
 app = Flask(__name__)
 app.config['JWT_SECRET_KEY'] = '7aM4/3Vj3Uv+'  # Change this to a secure random key in production
@@ -74,12 +75,74 @@ def verify_token():
     current_user_id = get_jwt_identity()
     return jsonify({'message': 'Token is valid', 'user_id': current_user_id}), 200
 
-@app.route('/user_data', methods=['GET'])
+@app.route('/add_subject', methods=['POST'])
 @jwt_required()
-def get_user_data():
+def add_subject():
+    current_user_id = get_jwt_identity()
+    user = User.query.get(current_user_id)
+    
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    name = request.form.get('name')
+    allocated_day = request.form.get('allocatedDay')
+    file = request.files.get('file')
+
+    if not name or not allocated_day or not file:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    filename = secure_filename(file.filename)
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(file_path)
+
+    # Generate flashcards from PDF
+    flashcards = generate_flashcards_from_pdf(file_path)
+
+    new_subject = Subject(
+        name=name,
+        allocated_day=allocated_day,
+        user_id=current_user_id,
+        total_flashcards=len(flashcards),
+        completed_flashcards=0,
+        progress=0
+    )
+
+    db.session.add(new_subject)
+    db.session.commit()
+
+    # Here you would typically save the flashcards to the database
+    # For simplicity, we're just returning them
+    return jsonify({
+        "id": new_subject.id,
+        "name": new_subject.name,
+        "allocated_day": new_subject.allocated_day,
+        "progress": new_subject.progress,
+        "flashcards_total": new_subject.total_flashcards,
+        "flashcards_studied": new_subject.completed_flashcards,
+        "flashcards": flashcards
+    }), 201
+
+def generate_flashcards_from_pdf(file_path):
+    flashcards = []
+    with open(file_path, 'rb') as file:
+        pdf_reader = PyPDF2.PdfReader(file)
+        for page in pdf_reader.pages:
+            text = page.extract_text()
+            # This is a very simple flashcard generation.
+            # In a real application, you'd want to use more sophisticated NLP techniques.
+            sentences = text.split('.')
+            for i in range(0, len(sentences), 2):
+                if i + 1 < len(sentences):
+                    question = sentences[i].strip()
+                    answer = sentences[i+1].strip()
+                    if question and answer:
+                        flashcards.append({"question": question, "answer": answer})
+    return flashcards
+
+@app.route('/test_user_data/<int:user_id>', methods=['GET'])
+def get_test_user_data(user_id):
     try:
-        current_user_id = get_jwt_identity()
-        current_user = User.query.get(current_user_id)
+        current_user = User.query.get(user_id)
         if not current_user:
             return jsonify({'error': 'User not found'}), 404
 
@@ -91,16 +154,61 @@ def get_user_data():
             'study_time': current_user.study_time,
             'subjects': [
                 {
+                    'id': subject.id,
                     'name': subject.name,
                     'progress': subject.progress,
                     'flashcards_total': subject.total_flashcards,
-                    'flashcards_studied': subject.completed_flashcards
+                    'flashcards_studied': subject.completed_flashcards,
+                    'allocated_day': subject.allocated_day
                 } for subject in current_user.subjects
             ]
         }
         return jsonify(user_data), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+# @app.route('/user_data', methods=['GET'])
+# @jwt_required()
+# def get_user_data():
+#     try:
+#         logging.debug("Attempting to get user data")
+#         current_user_id = get_jwt_identity()
+#         logging.debug(f"Current user ID: {current_user_id}")
+#         current_user = User.query.get(current_user_id)
+#         if not current_user:
+#             logging.error(f"User not found for ID: {current_user_id}")
+#             return jsonify({'error': 'User not found'}), 404
+
+#         user_data = {
+#             'id': current_user.id,
+#             'name': current_user.name,
+#             'email': current_user.email,
+#             'study_hours': current_user.study_hours,
+#             'study_time': current_user.study_time,
+#             'subjects': [
+#                 {
+#                     'name': subject.name,
+#                     'progress': subject.progress,
+#                     'flashcards_total': subject.total_flashcards,
+#                     'flashcards_studied': subject.completed_flashcards
+#                 } for subject in current_user.subjects
+#             ]
+#         }
+#         logging.debug(f"User data retrieved: {user_data}")
+#         return jsonify(user_data), 200
+#     except NoAuthorizationError:
+#         logging.error("No authorization token provided")
+#         return jsonify({'error': 'No authorization token provided'}), 401
+#     except Exception as e:
+#         logging.error(f"Error in get_user_data: {str(e)}")
+#         return jsonify({'error': str(e)}), 500
+
+# Add an error handler for JWT errors
+@jwt.unauthorized_loader
+def unauthorized_response(callback):
+    logging.error(f"Unauthorized access attempt: {callback}")
+    return jsonify({'error': 'Unauthorized access'}), 401
 
 if __name__ == '__main__':
     app.run(debug=True)

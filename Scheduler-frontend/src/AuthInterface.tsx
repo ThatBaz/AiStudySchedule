@@ -40,7 +40,7 @@ const Login = () => {
       }
       
       // Redirect to the dashboard
-      navigate('/');
+      navigate('/dashboard');
 
     } catch (error) {
       console.error('Error during login:', error);
