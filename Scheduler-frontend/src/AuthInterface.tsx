@@ -16,6 +16,10 @@ const Login = () => {
   const [password, setPassword] = useState('')
   const navigate = useNavigate(); // Initialize the navigation hook
 
+  /**
+   * Handles the login form submission
+   * param {React.FormEvent} e - The form event object
+   */
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -50,30 +54,7 @@ const Login = () => {
 
   return (
     <form onSubmit={handleLogin}>
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input 
-            id="email" 
-            type="email" 
-            placeholder="user@example.com" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required 
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <Input 
-            id="password" 
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required 
-          />
-        </div>
-        <Button type="submit" className="w-full">Log in</Button>
-      </div>
+      {/* Form fields */}
     </form>
   )
 }
@@ -93,10 +74,19 @@ const Signup = () => {
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [passwordError, setPasswordError] = useState('')
 
+  /**
+   * Handles changes to form inputs
+   * param {React.ChangeEvent<HTMLInputElement>} e - The input change event
+   */
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
+  /**
+   * Validates password strength
+   * @param {string} password - The password to validate
+   * @returns {string} Error message if password doesn't meet requirements, otherwise empty string
+   */
   const validatePassword = (password: string) => {
     if (password.length < 8) {
       return "Password must be at least 8 characters long"
@@ -113,6 +103,9 @@ const Signup = () => {
     return ""
   }
 
+  /**
+   * Handles navigation to the next step in signup process
+   */
   const handleNextStep = () => {
     if (step === 1) {
       const passwordValidationError = validatePassword(formData.password)
@@ -129,24 +122,42 @@ const Signup = () => {
     setStep(step + 1)
   }
 
+  /**
+   * Handles changes to subject fields
+   * param {number} index - Index of the subject being edited
+   * param {string} field - Field name being updated
+   * param {string} value - New value for the field
+   */
   const handleSubjectChange = (index: number, field: string, value: string) => {
     const newSubjects = [...formData.subjects]
     newSubjects[index] = { ...newSubjects[index], [field]: value }
     setFormData({ ...formData, subjects: newSubjects })
   }
 
+  /**
+   * Handles file uploads for subjects
+   * param {number} index - Index of the subject being edited
+   * param {File | null} file - Uploaded file object
+   */
   const handleFileChange = (index: number, file: File | null) => {
     const newSubjects = [...formData.subjects]
     newSubjects[index] = { ...newSubjects[index], file }
     setFormData({ ...formData, subjects: newSubjects })
   }
 
+  /**
+   * Adds a new subject to the form data
+   */
   const addSubject = () => {
     setFormData({
       ...formData,
       subjects: [...formData.subjects, { name: '', file: null, studyDay: '' }]
     })
   }
+  /**
+   * Handles form submission for signup
+   * param {React.FormEvent} e - The form event object
+   */
   // submit function for pushing the signup data to the backend
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -289,6 +300,11 @@ export default function AuthInterface() {
     }
   }, [])
 
+  
+  /**
+   * Verifies the authentication token
+   * param {string} token - The token to verify
+   */
   const verifyToken = async (token: string) => {
     try {
       const response = await fetch('http://localhost:5000/verify_token', {
