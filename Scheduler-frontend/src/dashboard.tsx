@@ -1,7 +1,10 @@
 'use client'
 
+// Import necessary components and hooks
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// Import custom UI components
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button";
@@ -14,6 +17,7 @@ import { ChevronDown, LogOut, Settings, Plus, User } from 'lucide-react'
 import ModernCalendar from './modern-calendar'
 import { Flashcard } from './components/Flashcard';
 
+// Define interfaces for data structures used in the component
 interface Subject {
   id: number;
   name: string;
@@ -38,7 +42,9 @@ interface Flashcard {
   answer: string;
 }
 
+// Main Dashboard component
 export default function Dashboard() {
+  // State variables to manage component state
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -53,8 +59,11 @@ export default function Dashboard() {
     file: null,
     allocatedDay: ''
   });
+
+  // Hook for navigation
   const navigate = useNavigate();
 
+  // Effect hook to fetch user data when component mounts
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -73,14 +82,18 @@ export default function Dashboard() {
       }
     };
 
+    // Fetch user data on component mount
     fetchUserData();
   }, []);
 
+  
+  // Handle logout functionality
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/');
   };
 
+  // Handle subject click event
   const handleSubjectClick = (subject: Subject) => {
     setSelectedSubject(subject);
     setIsFlashcardOpen(true);
@@ -94,23 +107,27 @@ export default function Dashboard() {
     ]);
   };
 
+  // Handle next flashcard button click
   const handleNextFlashcard = () => {
     if (currentFlashcardIndex < flashcards.length - 1) {
       setCurrentFlashcardIndex(currentFlashcardIndex + 1);
     }
   };
 
+  // Handle previous flashcard button click
   const handlePreviousFlashcard = () => {
     if (currentFlashcardIndex > 0) {
       setCurrentFlashcardIndex(currentFlashcardIndex - 1);
     }
   };
 
+  // Handle close flashcards button click
   const handleCloseFlashcards = () => {
     setIsFlashcardOpen(false);
     setSelectedSubject(null);
   };
 
+  // Handle add subject functionality
   const handleAddSubject = async () => {
     if (newSubject.name && newSubject.file && newSubject.allocatedDay) {
       const formData = new FormData();
@@ -142,6 +159,7 @@ export default function Dashboard() {
     }
   };
 
+  // Handle file change event
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setNewSubject(prev => ({
@@ -150,6 +168,7 @@ export default function Dashboard() {
     }));
   };
 
+  // Render different parts based on component state
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
@@ -164,9 +183,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gray-100">
+      {/* Header section */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-3xl font-bold text-gray-900">Study Dashboard</h1>
+          {/* User dropdown menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center space-x-2">
@@ -190,121 +211,117 @@ export default function Dashboard() {
           </DropdownMenu>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Your Subjects</h2>
-            <Dialog open={isAddingSubject} onOpenChange={setIsAddingSubject}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" /> Add New Subject
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Add New Subject</DialogTitle>
-                  <DialogDescription>
-                    Enter the details for your new subject here.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      value={newSubject.name}
-                      onChange={(e) => setNewSubject({ ...newSubject, name: e.target.value })}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="file" className="text-right">
-                      PDF File
-                    </Label>
-                    <Input
-                      id="file"
-                      type="file"
-                      onChange={handleFileChange}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="allocatedDay" className="text-right">
-                      Study Day
-                    </Label>
-                    <Select
-                      onValueChange={(value) => setNewSubject({ ...newSubject, allocatedDay: value })}
-                    >
-                      <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select a day" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                          <SelectItem key={day} value={day}>{day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleAddSubject}>Add Subject</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+
+      // Main content area of the dashboard
+<main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+  {/* Container for subject cards */}
+  <div className="px-4 py-6 sm:px-0">
+    {/* Header section for subjects */}
+    <div className="flex justify-between items-center mb-6">
+      {/* Title for the subjects section */}
+      <h2 className="text-2xl font-semibold text-gray-900">Your Subjects</h2>
+      
+      {/* Dialog for adding a new subject */}
+      <Dialog open={isAddingSubject} onOpenChange={setIsAddingSubject}>
+        <DialogTrigger asChild>
+          {/* Button to trigger the dialog */}
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Add New Subject
+          </Button>
+        </DialogTrigger>
+        
+        {/* Dialog content */}
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New Subject</DialogTitle>
+            <DialogDescription>
+              Enter the details for your new subject here.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {/* Form fields for new subject */}
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={newSubject.name}
+                onChange={(e) => setNewSubject({ ...newSubject, name: e.target.value })}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="file" className="text-right">
+                PDF File
+              </Label>
+              <Input
+                id="file"
+                type="file"
+                onChange={handleFileChange}
+                className="col-span-3"
+              />
+            </div>
+            
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="allocatedDay" className="text-right">
+                Study Day
+              </Label>
+              <Select
+                onValueChange={(value) => setNewSubject({ ...newSubject, allocatedDay: value })}
+              >
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select a day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                    <SelectItem key={day} value={day}>{day}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {userData.subjects.map((subject) => (
-              <Card key={subject.id} className="hover:shadow-lg transition-shadow duration-200">
-                <CardHeader>
-                  <CardTitle>{subject.name}</CardTitle>
-                  <CardDescription>Allocated Day: {subject.allocated_day}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Progress value={subject.progress} className="w-full" />
-                  <p className="mt-2">Progress: {subject.progress}%</p>
-                  <p>Flashcards: {subject.flashcards_studied} / {subject.flashcards_total}</p>
-                </CardContent>
-                <CardFooter>
+          
+          {/* Footer with submit button */}
+          <DialogFooter>
+            <Button onClick={handleAddSubject}>Add Subject</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+
+    {/* Grid container for displaying subjects */}
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Map over user's subjects and render cards */}
+      {userData.subjects.map((subject) => (
+        <Card key={subject.id} className="hover:shadow-lg transition-shadow duration-200">
+          <CardHeader>
+            <CardTitle>{subject.name}</CardTitle>
+            <CardDescription>Allocated Day: {subject.allocated_day}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Progress value={subject.progress} className="w-full" />
+            <p className="mt-2">Progress: {subject.progress}%</p>
+            <p>Flashcards: {subject.flashcards_studied} / {subject.flashcards_total}</p>
+          </CardContent>
+          <CardFooter>
+            {/* Button to view flashcards for the subject */}
             <Button onClick={() => handleSubjectClick(subject)}>View Flashcards</Button>
           </CardFooter>
         </Card>
       ))}
-      {isFlashcardOpen && selectedSubject && flashcards.length > 0 && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <Card className="w-96 h-64 relative">
-            <div className="h-full flex flex-col items-center justify-center p-4">
-              <p className="text-lg font-semibold text-center mb-4">{flashcards[currentFlashcardIndex].question}</p>
-              <Button onClick={() => setIsFlipped(!isFlipped)}>
-                {isFlipped ? 'Show Question' : 'Show Answer'}
-              </Button>
-              {isFlipped && (
-                <p className="mt-4 text-center">{flashcards[currentFlashcardIndex].answer}</p>
-              )}
-            </div>
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-4">
-              <Button onClick={handlePreviousFlashcard} disabled={currentFlashcardIndex === 0}>
-                Previous
-              </Button>
-              <Button onClick={handleNextFlashcard} disabled={currentFlashcardIndex === flashcards.length - 1}>
-                Next
-              </Button>
-            </div>
-            <Button className="absolute top-2 right-2" variant="ghost" onClick={handleCloseFlashcards}>
-              Close
-            </Button>
-          </Card>
-        </div>
-      )}
-        </div>
-        <div className="mt-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your Schedule</h2>
-            <ModernCalendar />
-          </div>
-        </div>
-      </main>
     </div>
+  </div>
+
+  {/* Schedule section */}
+  <div className="mt-8">
+    <h2 className="text-2xl font-semibold text-gray-900 mb-4">Your Schedule</h2>
+    <ModernCalendar />
+  </div>
+  </main>
+  </div>
   );
 }
 
